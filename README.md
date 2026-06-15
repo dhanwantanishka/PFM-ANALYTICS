@@ -5,7 +5,7 @@
 [![Pandas](https://img.shields.io/badge/pandas-2.0%2B-orange)]() 
 [![SQLite](https://img.shields.io/badge/database-SQLite-lightblue)]() 
 [![Tests](https://img.shields.io/badge/tests-22%F22%20passing-brightgreen)]() 
-[![Coverage](https://img.shields.io/badge/coverage-78%25-green)](https://github.com/dhanwantanishka/personal-finance-analytics)
+[![Coverage](https://img.shields.io/badge/coverage-78%25-green)](https://github.com/dhanwantanishka/PFM-ANALYTICS)
 
 > A **45-day Python internship project** building a complete Personal Finance Management (PFM) analytics system: data pipeline, EDA, ML models, and interactive dashboard.
 
