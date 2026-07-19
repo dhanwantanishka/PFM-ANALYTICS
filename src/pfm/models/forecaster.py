@@ -124,12 +124,50 @@ def forecast_next_days(model, X_recent: pd.DataFrame, days: int = 7) -> pd.Serie
     """Forecast spending for next N days using trained model."""
     forecasts = []
     X_current = X_recent.iloc[-1:].copy()
-    
+
     for _ in range(days):
         forecast = model.predict(X_current)[0]
-        forecasts.append(forecast)
-        
-        # Update features for next day (simplified)
-        X_current['day_of_week'] = (X_current['day_of_week'].values[0] + 1) % 7
-    
+        forecasts.append(max(0.0, float(forecast)))
+        X_current["day_of_week"] = (X_current["day_of_week"].values[0] + 1) % 7
+
     return pd.Series(forecasts, index=range(days))
+
+
+def compare_all_models(X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
+    """Train all forecast models and return a comparison table."""
+    results = [
+        train_linear_regression(X, y),
+        train_random_forest(X, y),
+        train_xgboost(X, y),
+    ]
+    rows = []
+    for result in results:
+        rows.append(
+            {
+                "model": result["type"],
+                "mae": result["mae"],
+                "rmse": result["rmse"],
+                "r2": result["r2"],
+            }
+        )
+    return pd.DataFrame(rows).sort_values("mae")
+
+
+def forecast_recommendation(comparison: pd.DataFrame, horizon: int) -> str:
+    """Generate a business recommendation from model comparison."""
+    best = comparison.iloc[0]
+    worst_r2 = comparison["r2"].min()
+    if best["r2"] < 0.3:
+        return (
+            f"Forecast confidence is low (best R²={best['r2']:.2f}). "
+            "Use these projections as directional guidance only."
+        )
+    if horizon > 14:
+        return (
+            f"{best['model']} performs best (MAE ₹{best['mae']:,.0f}), but longer horizons "
+            f"({horizon} days) increase uncertainty — review weekly."
+        )
+    return (
+        f"Recommended model: **{best['model']}** (MAE ₹{best['mae']:,.0f}, R² {best['r2']:.3f}). "
+        f"Expected daily spend for the next {horizon} days is shown with a ±15% confidence band."
+    )

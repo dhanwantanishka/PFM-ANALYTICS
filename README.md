@@ -393,7 +393,7 @@ main          ← production-ready (v0.1-phase1)
 
 ### Push to GitHub
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/personal-finance-analytics.git
+git remote add origin https://github.com/dhanwantanishka/PFM-ANALYTICS.git
 git branch -M main
 git push -u origin main
 git push origin v0.1-phase1  # Tag
@@ -518,4 +518,4 @@ Confidential — **Inventive BizPro Technologies Pvt. Ltd.** | Internship Assign
 
 **Last Updated:** June 13, 2026 | **Phase 1 Status:** ✅ COMPLETE  
 **Next Deliverable:** Phase 2 EDA Notebook (Due Day 18)  
-**GitHub:** [personal-finance-analytics](https://github.com/YOUR_USERNAME/personal-finance-analytics)
+**GitHub:** [PFM-ANALYTICS](https://github.com/dhanwantanishka/PFM-ANALYTICS)

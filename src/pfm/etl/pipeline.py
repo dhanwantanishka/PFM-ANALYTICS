@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from pfm.cleaning.validators import run_cleaning_pipeline
 from pfm.config import DB_PATH, NEEDS_CATEGORIES, SAVINGS_CATEGORIES, WANTS_CATEGORIES
 from pfm.db import get_session, init_db
-from pfm.db.models import Account, Budget, Category, Transaction
+from pfm.db.models import Account, Budget, Category, Transaction, User
 from pfm.features.engineering import engineer_features
 from pfm.ingestion.loaders import load_csv, load_excel, load_json, validate_schema
 
@@ -63,6 +63,7 @@ class ETLPipeline:
 
         try:
             self._seed_categories(session)
+            self._seed_users(session, data, budgets_df)
             account_map = self._seed_accounts(session, data)
             category_map = {c.name: c.id for c in session.query(Category).all()}
             count = self._load_transactions(session, data, account_map, category_map)
@@ -94,6 +95,39 @@ class ETLPipeline:
             "quality_report": self.quality_report,
             "schema_issues": self.schema_issues,
         }
+
+    def _seed_users(
+        self,
+        session: Session,
+        df: pd.DataFrame,
+        budgets_df: pd.DataFrame | None,
+    ) -> None:
+        """Seed default/synthetic users if they do not exist."""
+        from pfm.auth import hash_password
+        from pfm.config import USERS
+
+        # Extract unique users from df or default to "user_1"
+        user_ids = set()
+        user_col = "user_id" if "user_id" in df.columns else None
+        if user_col:
+            user_ids.update(df[user_col].dropna().astype(str).unique())
+        else:
+            user_ids.add("user_1")
+
+        if budgets_df is not None and "user_id" in budgets_df.columns:
+            user_ids.update(budgets_df["user_id"].dropna().astype(str).unique())
+
+        config_user_map = {u["user_id"]: u["user_name"] for u in USERS}
+
+        existing_user_ids = {u.user_id for u in session.query(User).all()}
+
+        for uid in user_ids:
+            if uid not in existing_user_ids:
+                name = config_user_map.get(uid, uid.replace("_", " ").title())
+                # Default password for seeded users is "password123"
+                p_hash = hash_password("password123")
+                session.add(User(user_id=uid, user_name=name, password_hash=p_hash))
+        session.flush()
 
     def _seed_categories(self, session: Session) -> None:
         budget_type_map = {}
