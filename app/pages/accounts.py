@@ -17,7 +17,7 @@ import utils.bootstrap  # noqa: F401
 
 from pfm.config import DB_PATH
 from pfm.db import get_session
-from pfm.db.models import Account
+from pfm.db.models import Account, RecurringTransaction, Transaction as Txn
 
 # ─── Auth guard ───────────────────────────────────────────────────────────────
 if "user_id" not in st.session_state:
@@ -131,14 +131,17 @@ try:
             # Confirm delete
             if st.session_state.get(f"confirm_del_{account.id}"):
                 st.warning(
-                    f"⚠️ Delete **{account.name}**? This will not delete your transactions, "
-                    "but they will be unlinked."
+                    f"⚠️ Delete **{account.name}**? This will permanently delete this account "
+                    f"and all {txn_count:,} transaction(s) associated with it."
                 )
                 c1, c2 = st.columns(2)
                 with c1:
                     if st.button("Yes, delete", key=f"yes_del_{account.id}", type="primary"):
                         del_session = get_session(DB_PATH)
                         try:
+                            # Delete dependent transactions and recurring transactions first
+                            del_session.query(Txn).filter(Txn.account_id == account.id).delete()
+                            del_session.query(RecurringTransaction).filter(RecurringTransaction.account_id == account.id).delete()
                             acc_to_del = del_session.get(Account, account.id)
                             if acc_to_del:
                                 del_session.delete(acc_to_del)

@@ -50,3 +50,17 @@ def test_etl_pipeline_end_to_end(tmp_path: Path, clean_df: pd.DataFrame) -> None
     assert result["rows_loaded"] == 5
     assert result["quality_report"]["schema_valid"] is True
     assert db_path.exists()
+
+
+def test_etl_pipeline_reimport_existing_transactions(tmp_path: Path, clean_df: pd.DataFrame) -> None:
+    csv_path = tmp_path / "transactions.csv"
+    db_path = tmp_path / "test.db"
+    clean_df.to_csv(csv_path, index=False)
+
+    pipeline = ETLPipeline(db_path=db_path)
+    pipeline.run(csv_path, fmt="csv")
+
+    # Re-importing same dataset should update existing records instead of failing on UNIQUE constraint
+    result_reimport = pipeline.run(csv_path, fmt="csv")
+    assert result_reimport["rows_loaded"] == 5
+

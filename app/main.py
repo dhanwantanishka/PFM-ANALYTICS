@@ -26,6 +26,11 @@ st.set_page_config(
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
+# Restore session from URL query parameters on browser refresh
+if "user_id" not in st.session_state and "user_id" in st.query_params:
+    st.session_state["user_id"] = st.query_params["user_id"]
+    st.session_state["user_name"] = st.query_params.get("user_name", st.query_params["user_id"])
+
 inject_global_styles(light_mode=st.session_state.light_mode)
 
 st.logo(":material/account_balance:")
@@ -71,7 +76,9 @@ if "user_id" in st.session_state:
     st.sidebar.markdown(f"**Logged in as:** {st.session_state.user_name}")
     if st.sidebar.button("Log out"):
         del st.session_state["user_id"]
-        del st.session_state["user_name"]
+        if "user_name" in st.session_state:
+            del st.session_state["user_name"]
+        st.query_params.clear()
         st.rerun()
 
 pg.run()

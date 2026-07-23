@@ -162,15 +162,15 @@ if _A:
 
     @analytics_router.get("/monthly", response_model=list[MonthlyReport])
     def monthly_report(user_id: str = Query(...), db: Session = Depends(get_db)):
-        from sqlalchemy import extract, cast, String
+        from sqlalchemy import case as sa_case
         rows = (
             db.query(
                 func.strftime("%Y-%m", Transaction.date).label("month"),
                 func.sum(
-                    func.case((Transaction.is_income == True, Transaction.amount), else_=0)
+                    sa_case((Transaction.is_income == True, Transaction.amount), else_=0)
                 ).label("income"),
                 func.sum(
-                    func.case((Transaction.is_income == False, Transaction.amount), else_=0)
+                    sa_case((Transaction.is_income == False, Transaction.amount), else_=0)
                 ).label("expenses"),
             )
             .join(Account, Transaction.account_id == Account.id)

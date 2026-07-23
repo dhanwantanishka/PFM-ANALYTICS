@@ -6,8 +6,8 @@ from typing import Dict
 
 def financial_health_score(transactions: pd.DataFrame, budgets: pd.DataFrame, user_id: str) -> Dict:
     """Calculate 0-100 Financial Health Score."""
-    user_txn = transactions[transactions['user_id'] == user_id]
-    user_budget = budgets[budgets['user_id'] == user_id]
+    user_txn = transactions[transactions['user_id'] == user_id] if 'user_id' in transactions.columns else pd.DataFrame(columns=['amount', 'is_income', 'category'])
+    user_budget = budgets[budgets['user_id'] == user_id] if 'user_id' in budgets.columns else pd.DataFrame(columns=['amount'])
     
     # Score components (each 0-20)
     scores = {}
@@ -66,8 +66,8 @@ def risk_categories(transactions: pd.DataFrame, budgets: pd.DataFrame, user_id: 
     user_txn = transactions[
         (transactions['user_id'] == user_id) & 
         (transactions['is_income'] == False)
-    ].copy()
-    user_budget = budgets[budgets['user_id'] == user_id].copy()
+    ].copy() if 'user_id' in transactions.columns and 'is_income' in transactions.columns else transactions.copy()
+    user_budget = budgets[budgets['user_id'] == user_id].copy() if 'user_id' in budgets.columns else budgets.copy()
     
     user_txn['month'] = user_txn['date'].dt.to_period('M').astype(str)
     

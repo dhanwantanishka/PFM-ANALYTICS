@@ -42,6 +42,8 @@ with tab1:
                     if user and verify_password(user.password_hash, login_password):
                         st.session_state["user_id"] = user.user_id
                         st.session_state["user_name"] = user.user_name
+                        st.query_params["user_id"] = user.user_id
+                        st.query_params["user_name"] = user.user_name
                         st.success(f"Welcome back, {user.user_name}!")
                         st.rerun()
                     else:
@@ -57,6 +59,8 @@ with tab1:
     if st.button(":material/key: Log In with Google (Demo Mode)", width="stretch"):
         st.session_state["user_id"] = "google_user@example.com"
         st.session_state["user_name"] = "Google Test User"
+        st.query_params["user_id"] = "google_user@example.com"
+        st.query_params["user_name"] = "Google Test User"
         
         # Seed Google user in DB if not exists
         session = get_session(DB_PATH)
@@ -113,6 +117,8 @@ with tab2:
                         
                         st.session_state["user_id"] = email_clean
                         st.session_state["user_name"] = name_clean
+                        st.query_params["user_id"] = email_clean
+                        st.query_params["user_name"] = name_clean
                         st.success(f"Account created successfully! Welcome, {name_clean}.")
                         st.rerun()
                 except Exception as exc:

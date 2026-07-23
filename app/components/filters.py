@@ -52,6 +52,10 @@ def render_sidebar_filters(
     user_id = override_user_id if override_user_id else st.session_state.get("user_id", "user_1")
     selected_name = override_user_name if override_user_name else st.session_state.get("user_name", "Unknown User")
 
+    income_only = False
+    expense_only = False
+    payment_methods = []
+
     with st.sidebar.expander(":material/tune: Filters", expanded=True):
         if transactions.empty:
             start_date = end_date = date.today()
@@ -69,16 +73,24 @@ def render_sidebar_filters(
                 key="filter_quick_range",
             )
 
+            data_min = transactions["date"].min().date()
+            data_max = transactions["date"].max().date()
+
             if QUICK_RANGES[quick_preset] is not None:
                 preset_start, preset_end = QUICK_RANGES[quick_preset]
-                # Clamp to available data
-                data_min = transactions["date"].min().date()
-                data_max = transactions["date"].max().date()
-                preset_start = max(preset_start, data_min)
-                preset_end = min(preset_end, data_max)
+                # Ensure local variable ranges are logical
+                if preset_start > preset_end:
+                    preset_start, preset_end = preset_end, preset_start
+                
+                # Check bounds to prevent start date from exceeding max available date
+                if preset_start > data_max:
+                    preset_start = preset_end = data_max
+                elif preset_end < data_min:
+                    preset_start = preset_end = data_min
+                else:
+                    preset_start = max(preset_start, data_min)
+                    preset_end = min(preset_end, data_max)
             else:
-                data_min = transactions["date"].min().date()
-                data_max = transactions["date"].max().date()
                 preset_start, preset_end = data_min, data_max
 
             # Custom date override

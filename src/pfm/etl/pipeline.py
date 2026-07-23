@@ -177,12 +177,17 @@ class ETLPipeline:
         account_map: dict[str, int],
         category_map: dict[str, int],
     ) -> int:
+        existing_map = {
+            t_id: db_id
+            for t_id, db_id in session.query(Transaction.transaction_id, Transaction.id).all()
+        }
         count = 0
         for _, row in df.iterrows():
+            tid = str(row["transaction_id"])
             user_id = row.get("user_id", "user_1")
             acct_key = f"{user_id}_{row['account_type']}"
-            txn = Transaction(
-                transaction_id=str(row["transaction_id"]),
+            txn_kwargs = dict(
+                transaction_id=tid,
                 date=pd.Timestamp(row["date"]).date(),
                 description=str(row["description"]),
                 amount=float(row["amount"]),
@@ -190,7 +195,7 @@ class ETLPipeline:
                 account_id=account_map[acct_key],
                 balance_after=float(row["balance_after"]) if pd.notna(row.get("balance_after")) else None,
                 is_income=bool(row["is_income"]),
-                merchant=row.get("merchant"),
+                merchant=row.get("merchant") if pd.notna(row.get("merchant")) else None,
                 day_of_week=int(row["day_of_week"]) if pd.notna(row.get("day_of_week")) else None,
                 is_weekend=bool(row["is_weekend"]) if pd.notna(row.get("is_weekend")) else None,
                 month=int(row["month"]) if pd.notna(row.get("month")) else None,
@@ -199,7 +204,13 @@ class ETLPipeline:
                 if pd.notna(row.get("rolling_30d_spend"))
                 else None,
             )
-            session.merge(txn)
+            if tid in existing_map:
+                txn_kwargs["id"] = existing_map[tid]
+
+            txn = Transaction(**txn_kwargs)
+            merged = session.merge(txn)
+            if merged.id is not None:
+                existing_map[tid] = merged.id
             count += 1
         return count
 
