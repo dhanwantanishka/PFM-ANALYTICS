@@ -502,4 +502,4 @@ Confidential — **Inventive BizPro Technologies Pvt. Ltd.** | Internship Assign
 ---
 
 **Last Updated:** July 2026 | **Project Status:** ✅ COMPLETE  
-**GitHub:** [PFM-ANALYTICS](https://github.com/dhanwantanishka/PFM-ANALYTICS)
+**Project:** [PFM-ANALYTICS](https://dhanwantanishka-pfm-analytics-appmain-lymgxe.streamlit.app/)
